@@ -1,0 +1,20 @@
+{
+  "name": "gobble-unpackage",
+  "version": "0.1.0",
+  "description": "Use only the needed files from NPM/SPM/CommonJS modules in your GobbleJS workflow",
+  "main": "gobble-unpackage.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gobble",
+    "commonjs",
+    "package"
+  ],
+  "author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
+  "license": "Beerware",
+  "dependencies": {
+    "sander": "^0.4.0",
+    "underscore": "^1.8.3"
+  }
+}

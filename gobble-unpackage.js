@@ -11,7 +11,7 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 		if (filename === undefined) { return true; }
 
 		if (filename instanceof Array) {
-			console.log('Linking fileS:', filename);
+// 			console.log('Linking fileS:', filename);
 			return sander.Promise.all(filename.map);
 		}
 
@@ -28,7 +28,7 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 
 		var packageJson = JSON.parse(sander.readFileSync(packageJsonFilename));
 		options = _.extend(packageJson, options);
-		console.log(options);
+// 		console.log(options);
 	}
 
 	if (options) {

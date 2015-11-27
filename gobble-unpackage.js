@@ -3,6 +3,7 @@ var sander = require('sander');
 var path = require('path');
 var _ = require('underscore');
 
+var sourceMapRegExp = new RegExp(/(?:\/\/#|\/\/@|\/\*#)\s*sourceMappingURL=(.*)\s*(?:\*\/\s*)?$/);
 
 
 function unpackage ( inputdir, outputdir, options/*, callback */) {
@@ -15,8 +16,18 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 			return sander.Promise.all(filename.map);
 		}
 
-// 		console.log('Linking file: ', inputdir, filename, outputdir);
-		return sander.symlink(inputdir, filename).to(outputdir, filename);
+		// If the library file refers to a sourcemap, excise it (sourcemaps are
+		// not tracked files). If not, it's enough to link it.
+		return sander.readFile(inputdir, filename).then(function(contents){;
+			contents = contents.toString();
+			if (contents.match(sourceMapRegExp)) {
+				contents = contents.replace(sourceMapRegExp, '');
+				return sander.writeFile(outputdir, filename, contents);
+			} else {
+	// 		console.log('Linking file: ', inputdir, filename, outputdir);
+				return sander.symlink(inputdir, filename).to(outputdir, filename);
+			}
+		});
 	}
 
 	var packageJsonFilename = path.join(inputdir, '/package.json');
@@ -55,7 +66,7 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 
 // 	console.log('Pending ops:', pending);
 
-	return sander.Promise.all(pending)/*.then(callback)*/;
+	return sander.Promise.all(pending);
 
 }
 

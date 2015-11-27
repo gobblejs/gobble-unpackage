@@ -8,7 +8,11 @@ There are a myriad of javascript package managers our there: Bower, NPM, JSPM,
 SPM, Volo, Meteor, Composer and so on.
 
 The goal of `gobble-unpackage` is allowing you, the web developer, to use any
-of these package managers, then use GobbleJS to filter out the files you need
+of these package managers, then use GobbleJS to filter out the files you don't
+need, keeping only those specified in the `package.json` definition.
+
+It also strips references to sourcemaps, as the sourcemap files will never be
+kept.
 
 
 ## Installation

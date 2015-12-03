@@ -9,25 +9,34 @@ var sourceMapRegExp = new RegExp(/(?:\/\/#|\/\/@|\/\*#)\s*sourceMappingURL=(.*)\
 function unpackage ( inputdir, outputdir, options/*, callback */) {
 
 	function linkFile(filename) {
+// 		console.log(filename);
 		if (filename === undefined) { return true; }
 
 		if (filename instanceof Array) {
 // 			console.log('Linking fileS:', filename);
-			return sander.Promise.all(filename.map);
+			return sander.Promise.all(filename.map(linkFile));
 		}
 
-		// If the library file refers to a sourcemap, excise it (sourcemaps are
-		// not tracked files). If not, it's enough to link it.
-		return sander.readFile(inputdir, filename).then(function(contents){;
-			contents = contents.toString();
-			if (contents.match(sourceMapRegExp)) {
-				contents = contents.replace(sourceMapRegExp, '');
-				return sander.writeFile(outputdir, filename, contents);
-			} else {
-	// 		console.log('Linking file: ', inputdir, filename, outputdir);
+		return sander.stat(inputdir, filename).then(function(stats) {
+			// If there is a reference to that directory, link the whole thing.
+			if (stats.isDirectory()) {
 				return sander.symlink(inputdir, filename).to(outputdir, filename);
 			}
+
+			// If the library *file* refers to a sourcemap, excise it (sourcemaps are
+			// not tracked files). If not, it's enough to link it.
+			return sander.readFile(inputdir, filename).then(function(contents){;
+				contents = contents.toString();
+				if (contents.match(sourceMapRegExp)) {
+					contents = contents.replace(sourceMapRegExp, '');
+					return sander.writeFile(outputdir, filename, contents);
+				} else {
+		// 		console.log('Linking file: ', inputdir, filename, outputdir);
+					return sander.symlink(inputdir, filename).to(outputdir, filename);
+				}
+			});
 		});
+
 	}
 
 	var packageJsonFilename = path.join(inputdir, '/package.json');

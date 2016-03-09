@@ -42,7 +42,16 @@ overrides as options to the 'unpackage' transform:
 ```js
 module.exports = gobble( directory_with_a_javascript_package )
 .transform( 'unpackage', { main: './build/foobar.js' });
+```
 
+The output will include sourcemap files. If these are giving any problems, specify
+the option `stripSourcemaps` with a truthy value. This will strip any existing
+sourcemaps and replace them with a fake inline sourcemap pointing to the original
+file:
+
+```js
+module.exports = gobble( directory_with_a_javascript_package )
+.transform( 'unpackage', { stripSourcemaps: true });
 ```
 
 ## Example usage

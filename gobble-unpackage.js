@@ -94,7 +94,7 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 
 				} else {
 // 					console.log('No sourcemap at ', filename);
-		// 		console.log('Linking file: ', inputdir, filename, outputdir);
+// 				console.log('Linking file: ', inputdir, filename, outputdir);
 					return sander.symlink(inputdir, filename).to(outputdir, filename);
 				}
 			});
@@ -127,13 +127,14 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 			// This is the most common way of defining stuff
 			pending.push(linkFile(options.main));
 		} else if ('spm' in options && 'main' in options.spm) {
-			// See spmjs.io. Some stuff (e.g. jQuery) uses this.
+			// See spmjs.io. Some stuff (e.g. jQuery, es6-promise) uses this.
 			pending.push(linkFile(options.spm.main));
 		}
 
-		if ('browser' in options)  {
-			// Becoming more popular as bower dies out
-			pending.push(linkFile(options.main));
+		if ('browser' in options && (typeof options.browser === 'string'))  {
+			// Becoming more popular as bower dies out, see
+			// https://github.com/defunctzombie/package-browser-field-spec
+			pending.push(linkFile(options.browser));
 		}
 
 	} else {

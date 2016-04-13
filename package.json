@@ -1,6 +1,6 @@
 {
   "name": "gobble-unpackage",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Use only the needed files from NPM/SPM/CommonJS modules in your GobbleJS workflow",
   "main": "gobble-unpackage.js",
   "scripts": {

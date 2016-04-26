@@ -1,12 +1,14 @@
+// 🦃namespace unpackage
+// Filters files from NPM/SPM/CommonJS modules so only the needed ones (e.g. 'main' in package.json) are used
 
 var sander = require('sander');
 var path = require('path');
 var _ = require('underscore');
 var SourceNode = require( 'source-map' ).SourceNode;
+getSourceNode = require( './get-source-node' );
 
 
 var sourceMapRegExp = new RegExp(/(?:\/\/#|\/\/@|\/\*#)\s*sourceMappingURL=(.*?)\s*(?:\*\/\s*)?$/);
-var dataUriRegexp = new RegExp(/^(data:)([\w\/\+]+)(;charset[=:][\w-]+)?(;base64)?,(.*)/);	// From https://github.com/ragingwind/data-uri-regex, modified
 
 function unpackage ( inputdir, outputdir, options/*, callback */) {
 
@@ -34,63 +36,38 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 
 				if (match) {
 
-					if (options.stripSourcemaps) {
-						// Generate an inline sourcemap pointing to the original filename (node_modules/../...)
-						contents = contents.replace(sourceMapRegExp, '');
-						var lines = contents.split('\n');
-						var lineCount = lines.length;
-						var identNode = new SourceNode(null, null, null, '');
-						var realFilename = sander.realpathSync(inputdir, filename);
+					// 🦃option stripSourcemaps: Boolean = false; Whether to strip any existing sourcemaps. Also strips the sourcemaps reference and creates inline sourcemaps pointing to the original location of the files.
+					return getSourceNode(inputdir, filename, options.stripSourcemaps).then(function (node) {
+						var generated = node.toStringWithSourceMap();
 
-						identNode.setSourceContent(realFilename, contents);
+						var sourcemap = JSON.parse(generated.map.toString());
+// 						console.log(sourcemap);
+						console.log(sourcemap.sources);
 
-						for (var i=0; i<lineCount; i++) {
-							var lineNode = new SourceNode(i+1, 0, realFilename, lines[i] + '\n');
-							// 							if (i) { identNode.add(newLineNode); }
-							identNode.add(lineNode);
-						}
-						var generated = identNode.toStringWithSourceMap();
-						var encodedMap = 'data:application/json;charset=utf-8;base64,' + new Buffer(generated.map.toString()).toString('base64');
+						// Replace paths to make them relative to the CWD
+						console.log(inputdir, outputdir, filename);
+						var srcDir = path.dirname(filename);
+						var cwd = process.cwd();
+
+						sourcemap.sources.forEach(function(sourcepath, i){
+
+							var newSourcepath = path.resolve(path.join(inputdir, srcDir), sourcepath);
+							sourcemap.sources[i] = path.relative(cwd, newSourcepath);
+						});
+
+// 						console.log(sourcemap.sources);
+
+						var encodedMap = 'data:application/json;charset=utf-8;base64,' + new Buffer(JSON.stringify(sourcemap)).toString('base64');
+
 						var sourceMapLocation;
 						if (filename.match(/\.css$/)) {
 							sourceMapLocation = '\n\n/*# sourceMappingURL=' + encodedMap + ' */\n';
 						} else {
 							sourceMapLocation = '\n\n//# sourceMappingURL=' + encodedMap + '\n'
 						}
-// 						return sander.writeFile(outputdir, filename, contents);
-						return sander.Promise.all([
-							sander.writeFile( outputdir, filename, generated.code + sourceMapLocation ),
-						]);
-					}
 
-
-					var dataUriMatch = dataUriRegexp.exec(match[1]);
-					if (dataUriMatch) {
-						// The sourcemap is inlined: just link the file.
-// 						console.log('Inline sourcemap at ', filename);
-						return sander.symlink(inputdir, filename).to(outputdir, filename);
-					} else {
-						// Link the file and the sourcemap file
-// 						console.log('Explicit sourcemap at ', inputdir, path.dirname(filename), match[1]);
-
-						var sourcemapFilename = match[1];
-						return sander.readFile( inputdir, path.dirname(filename), sourcemapFilename ).then( function ( mapContents ) {
-
-							var inlined;
- 							contents = contents.replace(sourceMapRegExp, '');
-
-							// Replace reference to sourcemap with inlined sourcemap
-							if (filename.substr(-4) === '.css') {
-								inlined = '/*# sourceMappi' + 'ngURL=data:application/json;charset=utf-8;base64,' +
-									mapContents.toString('base64') + ' */\n';
-							} else {
-								inlined = '//# sourceMappi' + 'ngURL=data:application/json;charset=utf-8;base64,' +
-									mapContents.toString('base64') + '\n';
-							}
-
-							return sander.writeFile(outputdir, filename, contents + inlined);
-						});
-					}
+						sander.writeFile( outputdir, filename, generated.code + sourceMapLocation );
+					});
 
 				} else {
 // 					console.log('No sourcemap at ', filename);

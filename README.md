@@ -11,8 +11,8 @@ The goal of `gobble-unpackage` is allowing you, the web developer, to use any
 of these package managers, then use GobbleJS to filter out the files you don't
 need, keeping only those specified in the `package.json` definition.
 
-It also strips references to sourcemaps, as the sourcemap files will never be
-kept.
+It also does some magic to the existing sourcemaps, so longer paths (including
+the module name) will be shown in the final files.
 
 
 ## Installation
@@ -47,7 +47,8 @@ module.exports = gobble( directory_with_a_javascript_package )
 The output will include sourcemap files. If these are giving any problems, specify
 the option `stripSourcemaps` with a truthy value. This will strip any existing
 sourcemaps and replace them with a fake inline sourcemap pointing to the original
-file:
+file. Use this option if you would like to completely ignore sourcemaps from
+the module's author.
 
 ```js
 module.exports = gobble( directory_with_a_javascript_package )

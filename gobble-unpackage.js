@@ -42,10 +42,10 @@ function unpackage ( inputdir, outputdir, options/*, callback */) {
 
 						var sourcemap = JSON.parse(generated.map.toString());
 // 						console.log(sourcemap);
-						console.log(sourcemap.sources);
+// 						console.log(sourcemap.sources);
 
 						// Replace paths to make them relative to the CWD
-						console.log(inputdir, outputdir, filename);
+// 						console.log(inputdir, outputdir, filename);
 						var srcDir = path.dirname(filename);
 						var cwd = process.cwd();
 
